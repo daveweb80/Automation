@@ -3,6 +3,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * This tool enables to make a conversion between two currencies
+ * by using a known rate.
+ * User opts the original and target currencies from a menu and
+ * typing the original amount.
+ * The system make the calculation and displays the new amount of the target currency.
+ * Many such conversions are possible.
+ * When the user opt to end, the screen shows all
+ * conversions made in session and writes that information to a file.
+ */
 public class CurrencyConverter {
     public static void main(String[] args) {
         StringBuilder mainMenu = new StringBuilder();
@@ -13,19 +23,21 @@ public class CurrencyConverter {
 
         String calcAgainYN = "y";
 
+        // Saves every calculation made during the session
         List<String> resultsList = new ArrayList<String>();
 
-        while (calcAgainYN.toLowerCase().equals("y")) {
-            int convertOption = 0;
-            double amount = 0;
-            double resultCalcAmount = 0;
+        while (calcAgainYN.toLowerCase().equals("y")) {   // As far as the user asked for a new calculation
+            int convertOption = 0; // User choice
+            double amount = 0;  // User amount in the original currency.
 
             Scanner scnr = new Scanner(System.in);  // Create a Scanner object
 
-            while (convertOption != 1 && convertOption != 2) {
-                System.out.println(mainMenu.toString());
-                if (convertOption != 0) System.out.println("WRONG MENU OPTION. PLEASE TRY AGAIN.");
+            while (convertOption != 1 && convertOption != 2) { // Valid options
 
+                // MAIN MENU IS DISPLAYED
+                System.out.println(mainMenu.toString());
+                // This message is possible only id wrong menu number is entered.
+                if (convertOption != 0) System.out.println("WRONG MENU OPTION. PLEASE TRY AGAIN.");
                 try {
                     convertOption = Integer.parseInt(scnr.nextLine());  // Read user input
                 }
@@ -48,23 +60,24 @@ public class CurrencyConverter {
             }
 
             try {
-                switch (convertOption) {
-                    case 1: // Convert Dollars to shekels
-                        Coin usd = CoinFactory.getCoinInstance(Coins.USD);
-                        resultCalcAmount = usd.calculate(amount);
-                        resultsList.add(String.format("Converted %.2f Dollars to %.2f Shekels. ",amount, resultCalcAmount));
+                // Calculating the amount of the targer currency
+                double resultCalcAmount = calcCurrencyAmount(convertOption, amount);
+                switch (convertOption) // Fills the results list
+                {
+                    case 1:
+                        resultsList.add(String.format("Converted %.2f Dollars to %.2f Shekels. ", amount, resultCalcAmount));
                         break;
-                    case 2: // Convert Shekels to Dollars
-                        Coin ils = CoinFactory.getCoinInstance(Coins.ILS);
-                        resultCalcAmount = ils.calculate(amount);
-                        resultsList.add(String.format("Converted %.2f Shekels to %.2f Dollars. ",amount, resultCalcAmount));
+                    case 2:
+                        resultsList.add(String.format("Converted %.2f Shekels to %.2f Dollars. ", amount, resultCalcAmount));
                         break;
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
 
-            System.out.printf("Total amount in your chosen currency is: %.2f \n",resultCalcAmount);
+                System.out.printf("Total amount in your chosen currency is: %.2f \n", resultCalcAmount);
+            }
+            catch(Exception ex)
+            {
+                System.out.printf("ERROR DURING CALCULATION: " + ex.getMessage());
+            }
 
             do
             {
@@ -77,15 +90,21 @@ public class CurrencyConverter {
             {
                 System.out.println("Thanks for using our currency converter.\n");
 
+                // Loops through the results list, which has been filled and display them.
                 for (String msg : resultsList) {
                     System.out.println(msg);
 
                 }
-                writeLogFile(resultsList,"c:\\logs\\results.txt");
+                writeLogFile(resultsList,"c:\\logs\\results.txt"); // writes all conversion made in session to a file.
             }
         }
     }
 
+    /**
+     * Records all calculations made in session to a file.
+     * @param resultsList
+     * @param LogFileName
+     */
     public static void writeLogFile (List<String> resultsList, String LogFileName){
         try {
             File file = new File(LogFileName);
@@ -101,5 +120,30 @@ public class CurrencyConverter {
             System.out.println("\nAn error occurred while writing to log file");
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Returns the calculated amount of a target currency by the original amount (the amount parameter(
+     * @param convertOption
+     * @param amount
+     * @return calculated amount of a target currency
+     * @throws Exception is thrown in any case of a problem in the calculation process.
+     */
+    private static double calcCurrencyAmount(int convertOption,double amount) throws Exception {
+        double resultCalcAmount = 0;
+            switch (convertOption) {
+                case 1: // Convert Dollars to shekels
+                    Coin usd = CoinFactory.getCoinInstance(Coins.USD);
+                    resultCalcAmount = usd.calculate(amount);
+                    break;
+                case 2: // Convert Shekels to Dollars
+                    Coin ils = CoinFactory.getCoinInstance(Coins.ILS);
+                    resultCalcAmount = ils.calculate(amount);
+                    break;
+                default:
+                    throw new Exception ("convert option number is unknown");
+            }
+
+        return resultCalcAmount;
     }
 }
